@@ -24,22 +24,10 @@ if (debug) {
 }
 
 // server routes
-server.get('/', (req, res) => {
-    res.render('main');
-});
-
-server.post('/api/private/auth', (req, res) => {
-    // ESLAM-TODO: auth algorithm
-});
-
-server.post('/api/private/data', (req, res) => {
-    // EHAB-TODO: private api logic
-});
-
-server.post('/api/public/:api_id', (req, res) => {
-    const _api_id = req.params.api_id; // public api id
-    // EHAB-TODO: public api logic
-});
+require('./routes/main_route')(server);
+require('./routes/auth_route')(server);
+require('./routes/private_api_route')(server);
+require('./routes/public_api_route')(server);
 
 // server entry point
 server.listen(process.env.PORT || 3000);
