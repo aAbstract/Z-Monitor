@@ -1,5 +1,5 @@
 module.exports = (server) => {
     server.get('/', (req, res) => {
-        res.render('main');
+        res.render('pages/main');
     });  
 };
