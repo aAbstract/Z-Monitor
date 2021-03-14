@@ -45,5 +45,3 @@ server.post('/api/public/:api_id', (req, res) => {
 server.listen(process.env.PORT || 3000);
 if (debug)
     console.log(`[INFO]: server started on 127.0.0.1:${process.env.PORT || 3000}`);
-
-test
