@@ -24,6 +24,10 @@ if (debug) {
 }
 
 // server routes
+server.get('/', (req, res) => {
+    res.render('main');
+});
+
 server.post('/api/private/auth', (req, res) => {
     // ESLAM-TODO: auth algorithm
 });
