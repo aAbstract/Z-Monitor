@@ -10,6 +10,7 @@ const debug = true;
 // server settings
 const server = express();
 server.set('view engine', 'ejs');
+server.use('/source', express.static('./assets'));
 server.use(body_parser.urlencoded({
     extended: false
 }));
@@ -24,10 +25,10 @@ if (debug) {
 }
 
 // server routes
-require('./routes/main_route')(server);
-require('./routes/auth_route')(server);
-require('./routes/private_api_route')(server);
-require('./routes/public_api_route')(server);
+require('./routes/main_route')(server, db_obj);
+require('./routes/auth_route')(server, db_obj);
+require('./routes/private_api_route')(server, db_obj);
+require('./routes/public_api_route')(server, db_obj);
 
 // server entry point
 server.listen(process.env.PORT || 3000);
