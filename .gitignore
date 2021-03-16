@@ -2,3 +2,5 @@ test/
 dev_scripts/
 database/
 node_modules/
+custom_modules/enc_dec.js
+custom_modules/security.js

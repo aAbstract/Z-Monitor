@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup</title>
+</head>
+
+<style>
+    html {
+        height: 100%;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+    }
+
+    .login-box {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 400px;
+        padding: 40px;
+        transform: translate(-50%, -50%);
+        background: #141e30;
+        box-sizing: border-box;
+        box-shadow: 0 15px 25px rgba(0, 0, 0, .6);
+        border-radius: 10px;
+    }
+
+    .login-box h2 {
+        margin: 0 0 30px;
+        padding: 0;
+        color: #fff;
+        text-align: center;
+    }
+
+    .login-box .user-box {
+        position: relative;
+    }
+
+    .login-box .user-box input {
+        width: 100%;
+        padding: 10px 0;
+        font-size: 16px;
+        color: #fff;
+        margin-bottom: 30px;
+        border: none;
+        border-bottom: 1px solid #fff;
+        outline: none;
+        background: transparent;
+    }
+
+    .login-box .user-box label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 10px 0;
+        font-size: 16px;
+        color: #fff;
+        pointer-events: none;
+        transition: .5s;
+    }
+
+    .login-box .user-box input:focus~label,
+    .login-box .user-box input:valid~label {
+        top: -20px;
+        left: 0;
+        color: #03e9f4;
+        font-size: 12px;
+    }
+
+    #btn_cont {
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+    }
+
+    .login-box button {
+        margin-left: auto;
+        margin-right: auto;
+        width: 160px;
+        height: 60px;
+        cursor: pointer;
+        background: transparent;
+        color: #03b0f4;
+        border: #03b0f4 1px solid;
+        border-radius: 48px;
+        font-size: 18px;
+        transition: 0.5s ease;
+    }
+
+    .login-box button:focus {
+        outline: none;
+    }
+
+    .login-box button:hover {
+        background: #03b0f4a4;
+        color: white;
+        border: none;
+    }
+
+    @media screen and (max-width: 600px) {
+        .login-box {
+            position: absolute;
+            top: 40%;
+            margin-left: auto;
+            margin-right: auto;
+            width: 90%;
+            padding: 30px;
+        }
+    }
+
+    .form_hints {
+        color: #ff0000;
+        display: none;
+    }
+
+    #user_name_hint {
+        margin-bottom: 24px;
+    }
+
+    #check_box_label {
+        color: white;
+    }
+</style>
+
+<body>
+    <!-- js includes -->
+    <script type="text/javascript" src="/source/jquery/jquery.js"></script>
+
+    <script>
+        // utils
+        function clear_all_tf_borders() {
+            $('user_name_txt').css('border', 'none');
+            $('user_name_txt').css('border-bottom', '1px solid #ffffff');
+
+            $('email_txt').css('border', 'none');
+            $('email_txt').css('border-bottom', '1px solid #ffffff');
+
+            $('pass_txt').css('border', 'none');
+            $('pass_txt').css('border-bottom', '1px solid #ffffff');
+
+            $('re_pass_txt').css('border', 'none');
+            $('re_pass_txt').css('border-bottom', '1px solid #ffffff');
+        }
+
+        function show_hint(element_id, hint_txt) {
+            $(element_id).text(hint_txt);
+            $(element_id).css('display', 'block');
+        }
+
+        $(document).ready(() => {
+            // main code
+            $('#signup_btn').click(() => {
+                const un_val = $('#user_name_txt').val();
+                const email_val = $('#email_txt').val();
+                const pass_val = $('#pass_txt').val();
+                const re_pass_val = $('#re_pass_txt').val();
+                if (pass_val !== re_pass_val) {
+                    clear_all_tf_borders();
+                    show_hint('#re_pass_hint', 'Passowrd Mismatch');
+                    $('#user_name_hint').css('display', 'none');
+                } else {
+                    $.post('/api/private/auth', {
+                        api_action: 'signup',
+                        user_name: un_val,
+                        user_pass: pass_val,
+                        email: email_val
+                    }, (data, status) => {
+                        if (data.hasOwnProperty('auth_api_msg')) {
+                            clear_all_tf_borders();
+                            show_hint('#user_name_hint', 'User Already Exist');
+                            $('#re_pass_hint').css('display', 'none');
+                        } else {
+                            if ($('#remeber_checkbox').is(':checked')) {
+                                let exp_date = new Date();
+                                exp_date.setFullYear(exp_date.getFullYear() + 1);
+                                document.cookie = `sessid=${data['sessid']}; expires=${exp_date.toUTCString()}; path=/`;
+                            } else {
+                                document.cookie = `sessid=${data['sessid']}; path=/`;
+                            }
+                            window.location.href = '/';
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+    <div class="login-box">
+        <h2>Signup</h2>
+        <form autocomplete="off">
+            <div class="user-box">
+                <input type="text" name="" required="" id="user_name_txt">
+                <label>Username</label>
+            </div>
+            <label id="user_name_hint" class="form_hints">test</label>
+            <div class="user-box">
+                <input type="text" name="" required="" id="email_txt">
+                <label>Email</label>
+            </div>
+            <div class="user-box">
+                <input type="password" name="" required="" id="pass_txt">
+                <label>Password</label>
+            </div>
+            <div class="user-box">
+                <input type="password" name="" required="" id="re_pass_txt">
+                <label>Re-Passowrd</label>
+            </div>
+            <label id="re_pass_hint" class="form_hints">test</label>
+            <br>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remeber_checkbox">
+                <label class="form-check-label" for="flexCheckChecked" id="check_box_label">
+                    Remeber me
+                </label>
+            </div>
+            <br>
+            <div id="btn_cont">
+                <button id="signup_btn" type="button">
+                    Signup
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>
