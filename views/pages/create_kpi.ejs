@@ -5,14 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <%- include('../templates/css_includes', {}) %>
+    <link rel="stylesheet" type="text/css" href="/source/chartjs/css/Chart.min.css">
         <title>Create KPI Profile</title>
 </head>
 
 <body>
     <%- include('../templates/js_includes', {}) %>
+    <script type="text/javascript" src="/source/chartjs/js/Chart.min.js"></script>
 
         <!-- widgets -->
         <script type="text/javascript" src="/source/widgets/test_ui_element.js"></script>
+        <script type="text/javascript" src="/source/widgets/activeStores_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/averageInventoryAmount_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/inventoryTurnover_KPI.js"></script>
         <style>
             body,
             html {
@@ -97,6 +102,7 @@
         <script>
             // runtime vars
             let dragged_index = 0;
+            let dummy_index = 0;
 
             let kpi_profile = {
                 kpis: []
@@ -104,22 +110,31 @@
 
             const kpi_ui_elements = [
                 {
-                    name: 'KPI_1',
-                    object: 'test_ui_element',
+                    name: 'Stores',
+                    object: 'activeStores_KPI',
+                    icon: 'fas fa-plus',
+                    kpi_params: {
+                        chart_id: `"chart_${dummy_index}"`,
+                        y_labels: '["A", "B", "C"]',
+                        x_data: '[10, 20, 30]',
+                        chart_label: '"test_label"',
+                        flag: true,
+                        comment: 'test_comment',
+                        activeStoresNo: '10'
+                    }
+                },
+                {
+                    name: 'INV',
+                    object: 'averageInventoryAmount_KPI',
                     icon: 'fas fa-plus'
                 },
                 {
-                    name: 'KPI_2',
-                    object: 'test_ui_element',
+                    name: 'Turn',
+                    object: 'inventoryTurnover_KPI',
                     icon: 'fas fa-plus'
                 },
                 {
-                    name: 'KPI_3',
-                    object: 'test_ui_element',
-                    icon: 'fas fa-plus'
-                },
-                {
-                    name: 'KPI_4',
+                    name: 'Test',
                     object: 'test_ui_element',
                     icon: 'fas fa-plus'
                 }
@@ -134,8 +149,8 @@
                 `;
             }
 
-            function get_view(widget_name) {
-                return eval(`${widget_name}.get_view()`);
+            function get_view(widget_name, args_json) {
+                return eval(`${widget_name}.get_view(${JSON.stringify(args_json)})`);
             }
 
             function allow_drop(event) {
@@ -150,14 +165,18 @@
                 height: fit-content;
                 padding: 8px;
                 border-radius: 12px;
-                top: ${event.pageY - 40}px;
-                left: ${event.pageX - 124 - 40}px;
+                top: ${event.pageY - 100}px;
+                left: ${event.pageX - 124 - 200}px;
                 border: #bdbdbd 1px solid;
                 `;
+                // update kpi state
+                if (true) // debug note
+                    kpi_ui_elements[dragged_index]['kpi_params'].chart_id = `"chart_${dummy_index}"`;
                 const new_kpi_html = `
-                <div id="kpi_cont" style="${kpi_cont_css}">${get_view(kpi_ui_elements[dragged_index]['object'])}</div>
+                <div id="kpi_cont" style="${kpi_cont_css}">${get_view(kpi_ui_elements[dragged_index]['object'], JSON.stringify(kpi_ui_elements[dragged_index]['kpi_params']))}</div>
                 `;
                 $('#kpi_canvas').html($('#kpi_canvas').html() + new_kpi_html);
+                dummy_index++;
             }
 
             function drag_action(event, item_index) {

@@ -74,13 +74,13 @@ let topSellingProducts_KPI = {
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <div style="display: flex; flex-direction: column; align-items: center;  ">
                     <div
-                        style="display: flex; align-items: center; background-image: url(./assets/images/background_chart.png); width: 300px; height: 140px; background-size: cover; margin-left: 50px;">
-                        <!-- flag ? './assets/images/blue up.png' :  -->
+                        style="display: flex; align-items: center; background-image: url(/source/images/background_chart.png); width: 300px; height: 140px; background-size: cover; margin-left: 50px;">
+                        <!-- flag ? '/source/images/blue_up.png' :  -->
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <div style="display: flex; align-items: center; margin-top: 70px; margin-left: 70px;">
-                                <!-- flag ? './assets/images/blue up.png' :  -->
-                                <img id="arrow" src="${topSellingProducts_KPI.state.flag_distinct ? './assets/images/blue up.png' : './assets/images/red down.png'}" style="width: 30px; height: 30px;">
-                                <img id="dolar" src="${topSellingProducts_KPI.state.flag_distinct ? './assets/images/blue clock.png' : './assets/images/red clock.png'}"
+                                <!-- flag ? '/source/images/blue_up.png' :  -->
+                                <img id="arrow" src="${topSellingProducts_KPI.state.flag_distinct ? '/source/images/blue_up.png' : '/source/images/red_down.png'}" style="width: 30px; height: 30px;">
+                                <img id="dolar" src="${topSellingProducts_KPI.state.flag_distinct ? '/source/images/blue_clock.png' : '/source/images/red_clock.png'}"
                                 style="height: 30px; width: 30px; margin-left: 12px;">
                                 <p id="topSellingProducts" style="color:${topSellingProducts_KPI.state.flag_distinct ? 'blue' : 'red'}; font-size: 24px; margin-left: 10px; margin-top: 17px;">${'$'} ${topSellingProducts_KPI.state.topSellingProducts_distinct}</p>
                             </div>
@@ -95,13 +95,13 @@ let topSellingProducts_KPI = {
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center;  ">
                     <div
-                        style="display: flex; align-items: center; background-image: url(./assets/images/background_chart.png); width: 300px; height: 140px; background-size: cover; margin-left: 50px;">
-                        <!-- flag ? './assets/images/blue up.png' :  -->
+                        style="display: flex; align-items: center; background-image: url(/source/images/background_chart.png); width: 300px; height: 140px; background-size: cover; margin-left: 50px;">
+                        <!-- flag ? '/source/images/blue_up.png' :  -->
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <div style="display: flex; align-items: center; margin-top: 70px; margin-left: 70px;">
-                                <!-- flag ? './assets/images/blue up.png' :  -->
-                                <img id="arrow" src="${topSellingProducts_KPI.state.flag_average ? './assets/images/blue up.png' : './assets/images/red down.png'}" style="width: 30px; height: 30px;">
-                                <img id="dolar" src="${topSellingProducts_KPI.state.flag_average ? './assets/images/blue clock.png' : './assets/images/red clock.png'}"
+                                <!-- flag ? '/source/images/blue_up.png' :  -->
+                                <img id="arrow" src="${topSellingProducts_KPI.state.flag_average ? '/source/images/blue_up.png' : '/source/images/red_down.png'}" style="width: 30px; height: 30px;">
+                                <img id="dolar" src="${topSellingProducts_KPI.state.flag_average ? '/source/images/blue_clock.png' : '/source/images/red_clock.png'}"
                                 style="height: 30px; width: 30px; margin-left: 12px;">
                                 <p id="activeStores" style="color:${topSellingProducts_KPI.state.flag_average ? 'blue' : 'red'}; font-size: 24px; margin-left: 10px; margin-top: 17px;">${'$'} ${topSellingProducts_KPI.state.topSellingProducts_average}</p>
                             </div>

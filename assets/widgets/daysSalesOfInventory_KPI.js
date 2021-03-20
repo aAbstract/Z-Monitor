@@ -30,13 +30,13 @@ let daysSalesOfInventory_KPI = {
         return `
         <div style="display: flex; flex-direction: column; align-items: center;  ">
             <div
-                style="display: flex; align-items: center; background-image: url(./assets/images/background_chart.png); width: 400px; height: 180px; background-size: cover; margin-left: 50px;">
-                <!-- flag ? './assets/images/blue up.png' :  -->
+                style="display: flex; align-items: center; background-image: url(/source/images/background_chart.png); width: 400px; height: 180px; background-size: cover; margin-left: 50px;">
+                <!-- flag ? '/source/images/blue_up.png' :  -->
                 <div style="display: flex; flex-direction: column; align-items: center;">
                     <div style="display: flex; align-items: center; margin-top: 70px; margin-left: 110px;">
-                        <!-- flag ? './assets/images/blue up.png' :  -->
-                        <img id="arrow" src="${daysSalesOfInventory_KPI.state.flag ? './assets/images/blue up.png' : './assets/images/red down.png'}" style="width: 30px; height: 30px;">
-                        <img id="dolar" src="${daysSalesOfInventory_KPI.state.flag ? './assets/images/blue clock.png' : './assets/images/red clock.png'}"
+                        <!-- flag ? '/source/images/blue_up.png' :  -->
+                        <img id="arrow" src="${daysSalesOfInventory_KPI.state.flag ? '/source/images/blue_up.png' : '/source/images/red_down.png'}" style="width: 30px; height: 30px;">
+                        <img id="dolar" src="${daysSalesOfInventory_KPI.state.flag ? '/source/images/blue_clock.png' : '/source/images/red_clock.png'}"
                         style="height: 30px; width: 30px; margin-left: 12px;">
                         <p id="activeStores" style="color:${daysSalesOfInventory_KPI.state.flag ? 'blue' : 'red'}; font-size: 24px; margin-left: 10px; margin-top: 17px;">${'$'} ${daysSalesOfInventory_KPI.state.daysSalesOfInventory}</p>
                     </div>

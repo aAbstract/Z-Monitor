@@ -30,12 +30,12 @@ let salesPerStore_KPI = {
         return `
         <div style="display: flex; flex-direction: column; align-items: center;  ">
             <div
-                style="display: flex; align-items: center; background-image: url(./assets/images/background_chart.png); width: 400px; height: 180px; background-size: cover; margin-left: 50px;">
-                <!-- flag ? './assets/images/blue up.png' :  -->
+                style="display: flex; align-items: center; background-image: url(/source/images/background_chart.png); width: 400px; height: 180px; background-size: cover; margin-left: 50px;">
+                <!-- flag ? '/source/images/blue_up.png' :  -->
                 <div style="display: flex; flex-direction: column; align-items: center;">
                     <div style="display: flex; align-items: center; margin-top: 70px; margin-left: 150px;">
-                        <!-- flag ? './assets/images/blue up.png' :  -->
-                        <img id="arrow" src="${salesPerStore_KPI.state.flag ? './assets/images/blue up.png' : './assets/images/red down.png'}" style="width: 30px; height: 30px;">
+                        <!-- flag ? '/source/images/blue_up.png' :  -->
+                        <img id="arrow" src="${salesPerStore_KPI.state.flag ? '/source/images/blue_up.png' : '/source/images/red_down.png'}" style="width: 30px; height: 30px;">
                         <p id="activeStores" style="color:${salesPerStore_KPI.state.flag ? 'blue' : 'red'}; font-size: 24px; margin-left: 10px; margin-top: 17px;">${'$'} ${salesPerStore_KPI.state.salesPerStore}</p>
                     </div>
                     <p style="color:${salesPerStore_KPI.state.flag ? 'blue' : 'red'}; margin-left: 160px;">
