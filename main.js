@@ -28,6 +28,7 @@ if (debug) {
 require('./routes/main_route')(server, db_obj);
 require('./routes/login_route')(server, db_obj);
 require('./routes/signup_route')(server, db_obj);
+require('./routes/add_kpi_route')(server, db_obj);
 
 // api routes
 require('./routes/auth_route')(server, db_obj);
