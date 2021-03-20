@@ -1,0 +1,55 @@
+<style>
+    html {
+        font-family: sans-serif;
+        height: 100%;
+        background-color: #f5f5f5;
+    }
+
+    body {
+        background-color: #f5f5f5;
+    }
+
+    #nav_bar {
+        width: 100%;
+    }
+
+    #logout_icon {
+        font-size: 48px;
+    }
+
+    #nav_cntrl_cont {
+        display: flex;
+        flex-direction: row;
+        align-content: flex-end;
+        justify-content: flex-end;
+        margin-bottom: 80px;
+    }
+
+    #nav_cntrl_cont div span {
+        margin-right: 16px;
+    }
+
+    #nav_cntrl_cont div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        transition: 0.5s ease;
+        cursor: pointer;
+        color: #616161;
+        margin-right: 24px;
+        margin-top: 16px;
+    }
+
+    #nav_cntrl_cont div:hover {
+        color: #64b5f6;
+    }
+</style>
+
+<div id="nav_bar">
+    <div id="nav_cntrl_cont">
+        <div>
+            <span>Sign out</span>
+            <i class="fas fa-sign-out-alt" id="logout_icon"></i>
+        </div>
+    </div>
+</div>
