@@ -105,20 +105,6 @@
             </div>
 
             <script>
-                const test_data_dwhs = [
-                    {
-                        data_whs_id: 0,
-                        data_whs_name: 'POS'
-                    },
-                    {
-                        data_whs_id: 1,
-                        data_whs_name: 'Inventory'
-                    },
-                    {
-                        data_whs_id: 2,
-                        data_whs_name: 'Sales'
-                    }
-                ];
                 const kpi_profiles = [
                     {
                         kpi_profile_id: 0,
@@ -148,6 +134,15 @@
                     }
                 ];
 
+                // load data from the server
+                $.post('/api/private/data', {
+                    api_method: 'get',
+                    sess_id: document.cookie.split('=')[1],
+                    target: 'users_whs'
+                }, (data, status) => {
+                    render_dwhs(data);
+                });
+
                 function get_sub_sec_card(card_name, action_route) {
                     return `<div class="sub_sec_card shadow p-3 mb-5 rounded" onclick="${action_route};">${card_name}</div>`;
                 }
@@ -156,13 +151,16 @@
                     return `<div class="action_btn shadow p-3 mb-5" onclick="${btn_action}"><i class="fas fa-plus"></i></div>`;
                 }
 
-                $(document).ready(() => {
+                function render_dwhs(dwhs) {
                     let dwhs_html = '';
-                    test_data_dwhs.forEach((x) => {
-                        dwhs_html += get_sub_sec_card(x['data_whs_name'], `window.location.href = \'/preview_dwhs?dwhs_id=${x['data_whs_id']}\';`);
+                    dwhs.forEach((x) => {
+                        dwhs_html += get_sub_sec_card(x['name'], `window.location.href = \'/preview_dwhs?dwhs_id=${x['ID']}\';`);
                     });
                     dwhs_html += get_action_btn(`(() => { alert('add_whs'); })();`);
+                    $('#dwh_cards_cont').html(dwhs_html);
+                }
 
+                $(document).ready(() => {
                     let kpis_html = '';
                     kpi_profiles.forEach((x) => {
                         kpis_html += get_sub_sec_card(x['kpi_profile_name'], `window.location.href = \'/preview_kpi?kpi_id=${x['kpi_profile_id']}\';`);
@@ -175,7 +173,6 @@
                     });
                     apis_html += get_action_btn(`(() => { alert('add_api'); })();`);
 
-                    $('#dwh_cards_cont').html(dwhs_html);
                     $('#kpi_cards_cont').html(kpis_html);
                     $('#api_cards_cont').html(apis_html);
                 });
