@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../templates/css_includes', {}) %>
+        <link rel="stylesheet" type="text/css" href="/source/table_lib/css/main.css">
+        <link rel="stylesheet" type="text/css" href="/source/table_lib/css/util.css">
+        <title>Z-Monitor</title>
+</head>
+
+<body>
+    <%- include('../templates/js_includes', {}) %>
+        <script src="/source/table_lib/js/main.js"></script>
+        <style>
+            body,
+            html {
+                height: 100%;
+            }
+
+            body {
+                background-color: #e0e0e0;
+            }
+
+            #main_cont {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: row;
+            }
+
+            #main_cont #tool_box {
+                width: 120px;
+                background-color: #11161ace;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                flex-wrap: wrap;
+                /* overflow-y: scroll; */
+            }
+
+            #main_cont #table_canvas {
+                flex-grow: 1;
+                position: relative;
+                padding: 12px;
+            }
+
+            .tool_box_row {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+            }
+
+            .kpi_card {
+                width: 90px;
+                height: 72px;
+                border: #bdbdbd 1px solid;
+                border-radius: 12px;
+                cursor: pointer;
+                display: flex;
+                flex-direction: column;
+                justify-content: end;
+                align-items: center;
+                transition: 0.5s ease;
+                margin: 8px;
+            }
+
+            .kpi_card i {
+                font-size: 32px;
+                color: #e0e0e0;
+                transition: 0.5s ease;
+                margin-top: 6px;
+            }
+
+            .kpi_card p {
+                color: #e0e0e0;
+                transition: 0.5s ease;
+            }
+
+            .kpi_card:hover {
+                color: #55c9e0;
+                border: #55c9e0 1px solid;
+            }
+
+            .kpi_card:hover i {
+                color: #55c9e0;
+            }
+
+            .kpi_card:hover p {
+                color: #55c9e0;
+            }
+
+            #tool_box_bot {
+                display: flex;
+                flex-grow: 1;
+                flex-direction: column;
+                justify-content: flex-end;
+            }
+
+            #table_body {
+                height: 96%;
+            }
+
+            .table_first_col {
+                padding-left: 32px;
+            }
+
+            .table_cell {
+                width: 72px;
+            }
+        </style>
+        <div id="main_cont">
+            <div id="tool_box">
+            </div>
+            <div id="table_canvas">
+                <div class="table100 ver1 m-b-110" id="table_body">
+                    <div class="table100-head">
+                        <table>
+                            <thead>
+                                <tr class="row100 head" id="header_cont">
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <div class="table100-body js-pscroll">
+                        <table>
+                            <tbody id="table_rows_cont">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const table_controls = [
+                {
+                    name: 'Filter',
+                    icon: 'fas fa-filter'
+                },
+                {
+                    name: 'Download',
+                    icon: 'fas fa-download'
+                },
+                {
+                    name: 'Upload',
+                    icon: 'fas fa-upload'
+                },
+                {
+                    name: 'Template',
+                    icon: 'fas fa-file-download'
+                }
+            ];
+
+            function get_tcont_card(kpi_name, kpi_icon) {
+                return `
+                <div class="kpi_card">
+                        <i class="${kpi_icon}"></i>
+                        <p>${kpi_name}</p>
+                </div>
+                `;
+            }
+
+            function get_table_header_html(fields) {
+                let headr_html = '';
+                let is_first = true;
+                fields.forEach((x) => {
+                    if (is_first) {
+                        headr_html += `<th class="table_first_col table_cell">${x['name']}</th>`;
+                        is_first = false;
+                    } else {
+                        headr_html += `<th class="table_cell">${x['name']}</th>`;
+                    }
+                });
+                return headr_html;
+            }
+
+            function get_table_row(dwhs_row) {
+                let row_html = '<tr class="row100 body">';
+                let is_first = true;
+                for (let key in dwhs_row) {
+                    if (is_first) {
+                        row_html += `<td class="table_first_col table_cell">${dwhs_row[key]}</td>`;
+                        is_first = false;
+                    }
+                    else {
+                        row_html += `<td class="table_cell">${dwhs_row[key]}</td>`;
+                    }
+                }
+                row_html += '</tr>'
+                return row_html;
+            }
+
+            function get_url_param(param_name) {
+                return new URLSearchParams(window.location.search).get(param_name);
+            }
+
+            $(document).ready(() => {
+                // main code
+                let table_tool_box_html = '';
+                for (let i = 0; i < table_controls.length; i++) {
+                    const x = table_controls[i]
+                    table_tool_box_html += get_tcont_card(x['name'], x['icon']);
+                    table_tool_box_html += '<br>'
+                }
+                table_tool_box_html += `
+                <div id="tool_box_bot">
+                    <div class="kpi_card">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <p>Logout</p>
+                    </div>
+                </div>
+                `;
+                $('#tool_box').html(table_tool_box_html);
+
+                $.post('/api/private/data', {
+                    api_method: 'get',
+                    sess_id: document.cookie.split('=')[1],
+                    target: 'dwhs_info',
+                    dwhs_name: get_url_param('dwhs_name')
+                }, (table_struct, status) => {
+                    $.post('/api/private/data', {
+                        api_method: 'get',
+                        sess_id: document.cookie.split('=')[1],
+                        target: 'dwhs_data',
+                        dwhs_name: get_url_param('dwhs_name')
+                    }, (table_data, status) => {
+                        let header_html = get_table_header_html(table_struct);
+                        let table_body = '';
+                        table_data.forEach((x) => {
+                            table_body += get_table_row(x);
+                        });
+                        $('#header_cont').html(header_html);
+                        $('#table_rows_cont').html(table_body);
+                    });
+                });
+            });
+        </script>
+</body>
+
+</html>

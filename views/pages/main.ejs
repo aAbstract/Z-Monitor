@@ -34,6 +34,7 @@
                     display: flex;
                     flex-direction: row;
                     justify-content: space-around;
+                    flex-wrap: wrap;
                     padding: 8px;
                 }
 
@@ -43,7 +44,7 @@
 
                 .sub_sec_card {
                     padding: 12px;
-                    width: 100px;
+                    width: fit-content;
                     height: 60px;
                     background-color: #2196f3;
                     border-radius: 12px;
@@ -54,6 +55,8 @@
                     cursor: pointer;
                     transition: 0.5s ease;
                     text-align: center;
+                    margin-right: 16px;
+                    margin-left: 8px;
                 }
 
                 .sub_sec_card:hover {
@@ -80,6 +83,13 @@
                     border: #2196f3 1px solid;
                     color: #2196f3;
                     background-color: white;
+                }
+
+                .action_btn_cont {
+                    display: flex;
+                    flex-grow: 1;
+                    flex-direction: row;
+                    justify-content: flex-end;
                 }
             </style>
             <div id="main_box" class="shadow-lg p-3 mb-5 bg-white rounded">
@@ -134,38 +144,60 @@
                     }
                 ];
 
-                // load data from the server
-                $.post('/api/private/data', {
-                    api_method: 'get',
-                    sess_id: document.cookie.split('=')[1],
-                    target: 'users_whs'
-                }, (data, status) => {
-                    render_dwhs(data);
-                });
-
                 function get_sub_sec_card(card_name, action_route) {
                     return `<div class="sub_sec_card shadow p-3 mb-5 rounded" onclick="${action_route};">${card_name}</div>`;
                 }
 
                 function get_action_btn(btn_action) {
-                    return `<div class="action_btn shadow p-3 mb-5" onclick="${btn_action}"><i class="fas fa-plus"></i></div>`;
+                    return `
+                    <div class="action_btn_cont">
+                        <div class="action_btn shadow p-3 mb-5" onclick="${btn_action}"><i class="fas fa-plus"></i></div>
+                    </div>
+                    `;
                 }
 
                 function render_dwhs(dwhs) {
                     let dwhs_html = '';
                     dwhs.forEach((x) => {
-                        dwhs_html += get_sub_sec_card(x['name'], `window.location.href = \'/preview_dwhs?dwhs_id=${x['ID']}\';`);
+                        dwhs_html += get_sub_sec_card(x['name'], `window.location.href = \'/preview_dwhs?dwhs_name=${x['name']}\';`);
                     });
                     dwhs_html += get_action_btn(`(() => { alert('add_whs'); })();`);
                     $('#dwh_cards_cont').html(dwhs_html);
                 }
 
-                $(document).ready(() => {
-                    let kpis_html = '';
-                    kpi_profiles.forEach((x) => {
-                        kpis_html += get_sub_sec_card(x['kpi_profile_name'], `window.location.href = \'/preview_kpi?kpi_id=${x['kpi_profile_id']}\';`);
+                function render_kpi_profiles(profiles) {
+                    let kpi_profiles_html = '';
+                    profiles.forEach((x) => {
+                        kpi_profiles_html += get_sub_sec_card(x['name'], `window.location.href = \'/show_kpi_profile?profile_id=${x['ID']}\';`);
                     });
-                    kpis_html += get_action_btn(`(() => { window.location.href = \'/add_kpi_profile\'; })();`);
+                    kpi_profiles_html += get_action_btn(`window.location.href = \'/add_kpi_profile\';`);
+                    $('#kpi_cards_cont').html(kpi_profiles_html);
+                }
+
+                $(document).ready(() => {
+                    // main code
+                    // load data from the server
+                    $.post('/api/private/data', {
+                        api_method: 'get',
+                        sess_id: document.cookie.split('=')[1],
+                        target: 'users_whs'
+                    }, (data, status) => {
+                        render_dwhs(data);
+                    });
+
+                    $.post('/api/private/data', {
+                        api_method: 'get',
+                        sess_id: document.cookie.split('=')[1],
+                        target: 'KPI_profiles'
+                    }, (data, status) => {
+                        render_kpi_profiles(data);
+                    });
+
+                    // let kpis_html = '';
+                    // kpi_profiles.forEach((x) => {
+                    //     kpis_html += get_sub_sec_card(x['kpi_profile_name'], `window.location.href = \'/preview_kpi?kpi_id=${x['kpi_profile_id']}\';`);
+                    // });
+                    // kpis_html += get_action_btn(`(() => { window.location.href = \'/add_kpi_profile\'; })();`);
 
                     let apis_html = '';
                     data_apis.forEach((x) => {
@@ -173,7 +205,7 @@
                     });
                     apis_html += get_action_btn(`(() => { alert('add_api'); })();`);
 
-                    $('#kpi_cards_cont').html(kpis_html);
+                    // $('#kpi_cards_cont').html(kpis_html);
                     $('#api_cards_cont').html(apis_html);
                 });
             </script>

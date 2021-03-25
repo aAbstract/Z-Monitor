@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../templates/css_includes', {}) %>
+        <title>Z-Monitor</title>
+</head>
+
+<body>
+    <%- include('../templates/js_includes', {}) %>
+        <script type="text/javascript" src="/source/chartjs/js/Chart.min.js"></script>
+
+        <!-- widgets -->
+        <script type="text/javascript" src="/source/widgets/ranked_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/set_point_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/view_state_KPI.js"></script>
+        <style>
+            body,
+            html {
+                height: 100%;
+            }
+
+            #main_cont {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: row;
+            }
+            
+            .kpi_cont {
+                cursor: pointer;
+                transition: 0.5s ease;
+            }
+            
+            .kpi_cont:hover {
+                border: #2196f3 1px solid !important;
+            }
+        </style>
+        <div id="main_cont">
+
+        </div>
+        <script>
+            function get_url_param(param_name) {
+                return new URLSearchParams(window.location.search).get(param_name);
+            }
+
+            function get_view(widget_name, args_json) {
+                return eval(`${widget_name}.get_view(${JSON.stringify(args_json)})`);
+            }
+
+            function render_kpi_profile(kpi_profile) {
+                $('#kpi_canvas').html('');
+                kpi_profile.kpis.forEach((x) => {
+                    const new_kpi_html = `
+                    <div id="kpi_cont" style="${x['view_params']}">${get_view(x['object'], JSON.stringify(x['disp_params']))}</div>
+                    `;
+                    $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                });
+            }
+
+            $(document).ready(() => {
+                // main code
+                $.post('/api/private/data', {
+                    api_method: 'get',
+                    sess_id: document.cookie.split('=')[1],
+                    target: 'KPI_profile',
+                    profile_id: get_url_param('profile_id')
+                }, (kpi_profile, status) => {
+                    render_kpi_profile(JSON.parse(kpi_profile.KPI_json));
+                });
+            });
+        </script>
+</body>
+
+</html>
