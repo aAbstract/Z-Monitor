@@ -47,9 +47,15 @@
 
 <div id="nav_bar">
     <div id="nav_cntrl_cont">
-        <div>
+        <div onclick="sign_out();">
             <span>Sign out</span>
             <i class="fas fa-sign-out-alt" id="logout_icon"></i>
+            <script>
+                function sign_out() {
+                    document.cookie = "sessid= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+                    window.location.href = '/';
+                }
+            </script>
         </div>
     </div>
 </div>

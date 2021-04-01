@@ -13,6 +13,9 @@
 <body>
     <%- include('../templates/js_includes', {}) %>
         <script src="/source/table_lib/js/main.js"></script>
+        <script src="/source/linqjs/linq.min.js"></script>
+        <script src="/source/xlsx/xlsx.full.min.js"></script>
+        <script src="/source/file_saver/FileSaver.min.js"></script>
         <style>
             body,
             html {
@@ -109,7 +112,45 @@
             .table_cell {
                 width: 72px;
             }
+
+            #float_search_form {
+                position: absolute;
+                top: 30px;
+                left: 125px;
+                background-color: white;
+                padding: 12px;
+                display: none;
+            }
+
+            #upload_file_form {
+                display: none;
+            }
         </style>
+
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#center_modal"
+            style="display: none;" id="center_modal_trigger"></button>
+
+        <div class="modal fade" id="center_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="center_modal_title"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="center_modal_body">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                            id="center_modal_close">Close</button>
+                        <button type="button" class="btn btn-primary" id="center_modal_ok">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="main_cont">
             <div id="tool_box">
             </div>
@@ -134,33 +175,144 @@
             </div>
         </div>
 
+        <div class="custom-file" id="upload_file_form">
+            <input type="file" class="custom-file-input" id="customFile">
+            <label class="custom-file-label" for="customFile">Choose file</label>
+        </div>
+
+        <div class="shadow-lg p-3 mb-5 bg-white rounded" id="float_search_form">
+            <input type="text" class="form-control" id="search_seed" placeholder="Search Seed">
+        </div>
+
         <script>
+            // runtime vars
+            let linq_engine = null;
+            let search_box_state = false;
+            let table_struct = [];
+
             const table_controls = [
                 {
                     name: 'Filter',
-                    icon: 'fas fa-filter'
+                    icon: 'fas fa-filter',
+                    callback: () => {
+                        const css_state = search_box_state ? 'none' : 'block';
+                        search_box_state = !search_box_state;
+                        $('#float_search_form').css('display', css_state);
+                    }
                 },
                 {
                     name: 'Download',
-                    icon: 'fas fa-download'
+                    icon: 'fas fa-download',
+                    callback: () => {
+                        show_save_xlsx_modal();
+                    }
                 },
                 {
                     name: 'Upload',
-                    icon: 'fas fa-upload'
+                    icon: 'fas fa-upload',
+                    callback: () => {
+                        $('#upload_file_form input').trigger('click');
+                    }
                 },
                 {
                     name: 'Template',
-                    icon: 'fas fa-file-download'
+                    icon: 'fas fa-file-download',
+                    callback: () => {
+                        let work_book = XLSX.utils.book_new();
+                        work_book.SheetNames.push('sheet_1');
+                        let sheet_data = [table_struct.slice(2)];
+                        let sheet = XLSX.utils.aoa_to_sheet(sheet_data);
+                        work_book.Sheets['sheet_1'] = sheet;
+                        let bin_work_book = XLSX.write(work_book, { bookType: 'xlsx', type: 'binary' });
+                        const xlsx_file_name = `${get_url_param('dwhs_name')}_template.xlsx`;
+                        saveAs(new Blob([xlsx_to_bin(bin_work_book)], { type: "application/octet-stream" }), xlsx_file_name);
+                    }
+                },
+                {
+                    name: 'Delete',
+                    icon: 'fas fa-trash-alt',
+                    callback: () => {
+                        let filtred_res = JSON.stringify(linq_engine.Where((x) => {
+                            let search_flag = false;
+                            Object.keys(x).forEach((key) => {
+                                search_flag |= x[key].toString().includes($('#search_seed').val());
+                            });
+                            return search_flag;
+                        }).Select((x) => {
+                            return x.ID;
+                        }).ToArray());
+                        $.post('/api/private/data', {
+                            api_method: 'delete',
+                            sess_id: document.cookie.split('=')[1],
+                            target: get_url_param('dwhs_name'),
+                            id_list: filtred_res
+                        }, (data, status) => {
+                            if (data.private_api_message == 'success') {
+                                alert('Data deleted successfully');
+                                location.reload();
+                            } else {
+                                alert('Error deleting data from the database');
+                            }
+                        });
+                    }
                 }
             ];
 
-            function get_tcont_card(kpi_name, kpi_icon) {
+            function get_tcont_card(kpi_name, kpi_icon, index) {
                 return `
-                <div class="kpi_card">
+                <div class="kpi_card" onclick="table_controls[${index}].callback();">
                         <i class="${kpi_icon}"></i>
                         <p>${kpi_name}</p>
                 </div>
                 `;
+            }
+
+            function xlsx_to_bin(file) {
+                let buffer = new ArrayBuffer(file.length);
+                let view = new Uint8Array(buffer);
+                for (let i = 0; i < file.length; i++) view[i] = file.charCodeAt(i) & 0xFF;
+                return buffer;
+            }
+
+            function show_save_xlsx_modal() {
+                let modal_html = `
+                <label for="xlsx_file_name">File Name</label>
+                <input type="text" class="form-control" id="xlsx_file_name" placeholder="File Name">
+                `;
+                $('#center_modal_title').text('Save File');
+                $('#center_modal_body').html(modal_html);
+                $('#center_modal_ok').off();
+                $('#center_modal_ok').click(() => {
+                    let work_book = XLSX.utils.book_new();
+                    work_book.SheetNames.push('sheet_1');
+                    let sheet_data = linq_engine.Where((x) => {
+                        let search_flag = false;
+                        Object.keys(x).forEach((key) => {
+                            search_flag |= x[key].toString().includes($('#search_seed').val());
+                        });
+                        return search_flag;
+                    }).ToArray();
+                    let sheet = XLSX.utils.aoa_to_sheet(parse_xlsx_to_file(sheet_data));
+                    work_book.Sheets['sheet_1'] = sheet;
+                    let bin_work_book = XLSX.write(work_book, { bookType: 'xlsx', type: 'binary' });
+                    const xlsx_file_name = `${$('#xlsx_file_name').val()}.xlsx`;
+                    saveAs(new Blob([xlsx_to_bin(bin_work_book)], { type: "application/octet-stream" }), xlsx_file_name);
+                    $('#center_modal_close').trigger('click');
+                });
+                $('#center_modal_trigger').trigger('click');
+            }
+
+            function parse_xlsx_to_file(json_objs) {
+                let res = [];
+                res.push(Object.keys(json_objs[0]).slice(2));
+                json_objs.forEach((obj) => {
+                    let obj_data = [];
+                    Object.keys(obj).slice(2).forEach((key) => {
+                        obj_data.push(obj[key]);
+                    });
+                    res.push(obj_data);
+                });
+                return res;
             }
 
             function get_table_header_html(fields) {
@@ -173,6 +325,7 @@
                     } else {
                         headr_html += `<th class="table_cell">${x['name']}</th>`;
                     }
+                    table_struct.push(x['name']);
                 });
                 return headr_html;
             }
@@ -197,23 +350,68 @@
                 return new URLSearchParams(window.location.search).get(param_name);
             }
 
+            function sign_out() {
+                document.cookie = "sessid= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+                window.location.href = '/';
+            }
+
             $(document).ready(() => {
                 // main code
+                $('#upload_file_form input').on('change', () => {
+                    let file_reader = new FileReader();
+                    file_reader.onload = (e) => {
+                        let bin_data = e.target.result;
+                        let workbook = XLSX.read(bin_data, { type: 'binary' });
+                        let json_objects = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[workbook.SheetNames[0]]);
+                        $.post('/api/private/data', {
+                            api_method: 'post',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'dwhs_feed',
+                            table_name: get_url_param('dwhs_name'),
+                            table_struct: table_struct.slice(1),
+                            data_feed: JSON.stringify(json_objects)
+                        }, (data, status) => {
+                            if (data.private_api_message == 'success') {
+                                alert('data was added');
+                                location.reload();
+                            } else {
+                                alert('error adding the data');
+                            }
+                        });
+                    }
+                    file_reader.readAsBinaryString(document.querySelector('#upload_file_form input').files[0]);
+                });
+
                 let table_tool_box_html = '';
                 for (let i = 0; i < table_controls.length; i++) {
                     const x = table_controls[i]
-                    table_tool_box_html += get_tcont_card(x['name'], x['icon']);
+                    table_tool_box_html += get_tcont_card(x['name'], x['icon'], i);
                     table_tool_box_html += '<br>'
                 }
                 table_tool_box_html += `
                 <div id="tool_box_bot">
                     <div class="kpi_card">
-                        <i class="fas fa-sign-out-alt"></i>
+                        <i class="fas fa-sign-out-alt" onclick="sign_out();"></i>
                         <p>Logout</p>
                     </div>
                 </div>
                 `;
                 $('#tool_box').html(table_tool_box_html);
+
+                $('#search_seed').on('input', () => {
+                    const search_res = linq_engine.Where((x) => {
+                        let search_flag = false;
+                        Object.keys(x).forEach((key) => {
+                            search_flag |= x[key].toString().includes($('#search_seed').val());
+                        });
+                        return search_flag;
+                    }).ToArray();
+                    let res_table_body = '';
+                    search_res.forEach((x) => {
+                        res_table_body += get_table_row(x);
+                    });
+                    $('#table_rows_cont').html(res_table_body);
+                });
 
                 $.post('/api/private/data', {
                     api_method: 'get',
@@ -234,6 +432,7 @@
                         });
                         $('#header_cont').html(header_html);
                         $('#table_rows_cont').html(table_body);
+                        linq_engine = Enumerable.From(table_data);
                     });
                 });
             });

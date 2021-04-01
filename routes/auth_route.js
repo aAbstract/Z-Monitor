@@ -3,6 +3,29 @@ const encr_module = require('../custom_modules/enc_dec');
 
 const debug = true;
 
+function create_new_user_routine(user_name, db_obj) {
+    db_obj.run(`
+    INSERT INTO users_dwhs (uid, wid)
+    VALUES ((SELECT users.ID FROM users WHERE users.user_name = ?), 1), ((SELECT users.ID FROM users WHERE users.user_name = ?), 6), ((SELECT users.ID FROM users WHERE users.user_name = ?), 7);
+    `, [user_name, user_name, user_name], (err) => {
+        if (err)
+            console.log(`[ERROR]: ${err.message}`);
+    });
+    db_obj.run(`
+    INSERT INTO KPI_profiles (uid, KPI_json, name)
+    VALUES ((SELECT users.ID FROM users WHERE users.user_name = ?), (
+        SELECT KPI_json FROM KPI_profiles WHERE ID = 5
+    ), 'TPOS1'), ((SELECT users.ID FROM users WHERE users.user_name = ?), (
+        SELECT KPI_json FROM KPI_profiles WHERE ID = 11
+    ), 'FIN_KPI'), ((SELECT users.ID FROM users WHERE users.user_name = ?), (
+        SELECT KPI_json FROM KPI_profiles WHERE ID = 12
+    ), 'STOCK_KPI');
+    `, [user_name, user_name, user_name], (err) => {
+        if (err)
+            console.log(`[ERROR]: ${err.message}`);
+    });
+}
+
 module.exports = (server, db_obj) => {
     server.post('/api/private/auth', (req, res) => {
         const _api_action = req.body.api_action;
@@ -31,6 +54,7 @@ module.exports = (server, db_obj) => {
                     if (err && debug) {
                         console.log(`[ERROR]: ${err.message}`);
                     } else {
+                        create_new_user_routine(_user_name, db_obj);
                         res.json({
                             sessid: sec_manager.generate_secure_cookie(_user_name)
                         });

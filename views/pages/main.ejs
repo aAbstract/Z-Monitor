@@ -19,7 +19,7 @@
                     margin-left: auto;
                     margin-right: auto;
                     width: 600px;
-                    height: 600px;
+                    height: fit-content;
                     padding: 40px;
                     display: flex;
                     flex-direction: column;
@@ -28,7 +28,7 @@
 
                 .sub_sec_box {
                     width: 100%;
-                    height: 80px;
+                    height: fit-content;
                     border: #9e9e9e 1px solid;
                     border-radius: 25px;
                     display: flex;
@@ -77,6 +77,7 @@
                     flex-direction: row;
                     align-items: center;
                     justify-content: center;
+                    margin-bottom: 12px !important;
                 }
 
                 .action_btn:hover {
@@ -90,8 +91,32 @@
                     flex-grow: 1;
                     flex-direction: row;
                     justify-content: flex-end;
+                    align-items: flex-end;
                 }
             </style>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#center_modal"
+                style="display: none;" id="center_modal_trigger"></button>
+
+            <div class="modal fade" id="center_modal" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="center_modal_title"></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="center_modal_body">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                id="center_modal_close">Close</button>
+                            <button type="button" class="btn btn-primary" id="center_modal_ok">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="main_box" class="shadow-lg p-3 mb-5 bg-white rounded">
                 <div class="sub_sec_cont">
                     <span>
@@ -100,12 +125,16 @@
                     <div class="sub_sec_box" id="dwh_cards_cont">
                     </div>
                 </div>
+                <br>
+                <br>
                 <div class="sub_sec_cont">
                     <span>
                         KPI profiles
                     </span>
                     <div class="sub_sec_box" id="kpi_cards_cont"></div>
                 </div>
+                <br>
+                <br>
                 <div class="sub_sec_cont">
                     <span>
                         Data APIs
@@ -115,34 +144,7 @@
             </div>
 
             <script>
-                const kpi_profiles = [
-                    {
-                        kpi_profile_id: 0,
-                        kpi_profile_name: 'POS'
-                    },
-                    {
-                        kpi_profile_id: 1,
-                        kpi_profile_name: 'Inventory'
-                    },
-                    {
-                        kpi_profile_id: 2,
-                        kpi_profile_name: 'Sales'
-                    }
-                ];
-                const data_apis = [
-                    {
-                        api_id: 0,
-                        api_name: 'POS'
-                    },
-                    {
-                        api_id: 1,
-                        api_name: 'Inventory'
-                    },
-                    {
-                        api_id: 2,
-                        api_name: 'Sales'
-                    }
-                ];
+                let dwhs_cache = [];
 
                 function get_sub_sec_card(card_name, action_route) {
                     return `<div class="sub_sec_card shadow p-3 mb-5 rounded" onclick="${action_route};">${card_name}</div>`;
@@ -161,7 +163,7 @@
                     dwhs.forEach((x) => {
                         dwhs_html += get_sub_sec_card(x['name'], `window.location.href = \'/preview_dwhs?dwhs_name=${x['name']}\';`);
                     });
-                    dwhs_html += get_action_btn(`(() => { alert('add_whs'); })();`);
+                    dwhs_html += get_action_btn(`window.location.href = \'/add_dwhs\';`);
                     $('#dwh_cards_cont').html(dwhs_html);
                 }
 
@@ -174,6 +176,69 @@
                     $('#kpi_cards_cont').html(kpi_profiles_html);
                 }
 
+                function render_api_cards(apis) {
+                    let api_card_html = '';
+                    apis.forEach((x) => {
+                        const api_data = JSON.parse(x['info']);
+                        api_card_html += get_sub_sec_card(api_data['api_name'], `window.location.href = \'/public_api/${x['ID']}\';`);
+                    });
+                    let api_add_action = `
+                    (() => {
+                        show_add_api_modal(); 
+                    })();
+                    `;
+                    api_card_html += get_action_btn(api_add_action);
+                    $('#api_cards_cont').html(api_card_html);
+                }
+
+                function show_add_api_modal() {
+                    let modal_body = `<select class="form-control" id="dwhs_to_api">`;
+                    dwhs_cache.forEach((x) => {
+                        modal_body += `<option value="${x['ID']}">${x['name']}</option>`;
+                    });
+                    modal_body += '</select>';
+                    modal_body += '<br>';
+                    modal_body += `
+                    <label for="api_name_tf">API Name</label>
+                    <input type="text" class="form-control" id="api_name_tf" placeholder="API Name">
+                    `
+                    $('#center_modal_ok').off();
+                    $('#center_modal_ok').click(() => {
+                        $.post('/api/private/data', {
+                            api_method: 'post',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'public_apis',
+                            api_info: JSON.stringify({
+                                api_name: $('#api_name_tf').val(),
+                                dwhs: $("#dwhs_to_api option:selected").text()
+                            })
+                        }, (data, status) => {
+                            if (data.private_api_message == 'success') {
+                                setTimeout(() => {
+                                    $('#center_modal_title').text('API INFO');
+                                    $('#center_modal_body').html(
+                                        `
+                                    <P style="overflow-wrap: break-word;">API_URL: ${data.api_url}</P>
+                                    <P style="overflow-wrap: break-word;">API_KEY: ${data.api_key}</P>
+                                    `
+                                    );
+                                    $('#center_modal_ok').off();
+                                    $('#center_modal_ok').click(() => {
+                                        location.reload();
+                                    });
+                                    $('#center_modal_trigger').trigger('click');
+                                }, 1000);
+                            } else {
+                                alert('Error Binding an API to The Data Warehouse');
+                            }
+                        });
+                        $('#center_modal_close').trigger('click');
+                    });
+                    $('#center_modal_title').text('Bind API to Database');
+                    $('#center_modal_body').html(modal_body);
+                    $('#center_modal_trigger').trigger('click');
+                }
+
                 $(document).ready(() => {
                     // main code
                     // load data from the server
@@ -182,6 +247,7 @@
                         sess_id: document.cookie.split('=')[1],
                         target: 'users_whs'
                     }, (data, status) => {
+                        dwhs_cache = data;
                         render_dwhs(data);
                     });
 
@@ -193,20 +259,13 @@
                         render_kpi_profiles(data);
                     });
 
-                    // let kpis_html = '';
-                    // kpi_profiles.forEach((x) => {
-                    //     kpis_html += get_sub_sec_card(x['kpi_profile_name'], `window.location.href = \'/preview_kpi?kpi_id=${x['kpi_profile_id']}\';`);
-                    // });
-                    // kpis_html += get_action_btn(`(() => { window.location.href = \'/add_kpi_profile\'; })();`);
-
-                    let apis_html = '';
-                    data_apis.forEach((x) => {
-                        apis_html += get_sub_sec_card(x['api_name'], `window.location.href = \'/edit_api?api_id=${x['api_id']}\';`);
+                    $.post('/api/private/data', {
+                        api_method: 'get',
+                        sess_id: document.cookie.split('=')[1],
+                        target: 'public_apis'
+                    }, (data, status) => {
+                        render_api_cards(data);
                     });
-                    apis_html += get_action_btn(`(() => { alert('add_api'); })();`);
-
-                    // $('#kpi_cards_cont').html(kpis_html);
-                    $('#api_cards_cont').html(apis_html);
                 });
             </script>
 </body>

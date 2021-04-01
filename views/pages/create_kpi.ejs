@@ -17,6 +17,8 @@
         <script type="text/javascript" src="/source/widgets/ranked_KPI.js"></script>
         <script type="text/javascript" src="/source/widgets/set_point_KPI.js"></script>
         <script type="text/javascript" src="/source/widgets/view_state_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/raw_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/stacked_line_KPI.js"></script>
         <style>
             body,
             html {
@@ -110,6 +112,18 @@
                 border: #757575 1px solid !important;
                 pointer-events: none;
             }
+
+            #sec_tool_box {
+                position: absolute;
+                top: 340px;
+                left: 125px;
+                width: 120px;
+                height: fit-content;
+                background-color: #11161ace;
+                padding: 8px !important;
+                z-index: 1;
+                display: none;
+            }
         </style>
 
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" id="modal_trigger"
@@ -161,6 +175,10 @@
             </div>
         </div>
 
+        <div id="sec_tool_box" class="shadow-lg p-3 mb-5 rounded">
+
+        </div>
+
         <div id="main_cont">
             <div id="tool_box">
             </div>
@@ -207,7 +225,7 @@
                             show_modal(modal_html_body, 'Create Ranked KPI');
                             $('#modal_ok').off();
                             $('#modal_ok').click(() => {
-                                parent_obj.source_params.data_source = $("#dwhs option:selected").text();
+                                parent_obj.source_params.data_source = $('#dwhs option:selected').text();
                                 parent_obj.source_params.labels_col = $('#labels_cols').val();
                                 parent_obj.source_params.aggr_source = $('#aggr_eq').val();
                                 $('#modal_close').trigger('click');
@@ -255,6 +273,59 @@
                         comment: 'test_comment',
                         kpi_name: 'test_name',
                         activeStoresNo: '0'
+                    }
+                },
+                {
+                    name: 'Raw',
+                    object: 'raw_KPI',
+                    icon: 'far fa-file-alt',
+                    source_params: {},
+                    v_box_size: [240, 320],
+                    populate_modal_form_body: (parent_obj, cont_css) => {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'users_whs'
+                        }, (data, status) => {
+                            let modal_html_body = `<select class="form-control" id="dwhs" onchange="dwhs_select_handler('raw_kpi');">`;
+                            modal_html_body += `<option value="none">None</option>`;
+                            data.forEach((x) => {
+                                modal_html_body += `<option value="${x['ID']}">${x['name']}</option>`;
+                            });
+                            modal_html_body += '</select>';
+                            modal_html_body += '<br>';
+                            modal_html_body += `
+                            <label for="kpi_name_tf">KPI Name</label>
+                            <input type="text" class="form-control" id="kpi_name_tf" placeholder="KPI Name">
+                            `;
+                            modal_html_body += '<br>';
+                            show_modal(modal_html_body, 'Create Raw Text KPI');
+                            $('#modal_ok').off();
+                            $('#modal_ok').click(() => {
+                                parent_obj.source_params.data_source = $("#dwhs option:selected").text();
+                                parent_obj.source_params.raw_script = $('#raw_sc').val();
+                                $('#modal_close').trigger('click');
+                                $.post('/api/private/data', {
+                                    api_method: 'get',
+                                    sess_id: document.cookie.split('=')[1],
+                                    target: 'kpi_raw',
+                                    data_source: parent_obj.source_params.data_source,
+                                    raw_sc: parent_obj.source_params.raw_script
+                                }, (data, status) => {
+                                    parent_obj.disp_params.kpi_name = $('#kpi_name_tf').val();
+                                    parent_obj.disp_params.raw_body_data = data;
+                                    // copy KPI structure into render buffer
+                                    parent_obj.view_params = cont_css;
+                                    kpi_profile.kpis.push(JSON.parse(JSON.stringify(parent_obj)));
+                                    // call render function
+                                    render_kpi_profile();
+                                });
+                            });
+                        });
+                    },
+                    disp_params: {
+                        kpi_name: '',
+                        raw_body_data: {}
                     }
                 },
                 {
@@ -316,7 +387,121 @@
                     name: 'Monitor',
                     object: 'monitor_KPI',
                     icon: 'fas fa-file-medical-alt',
-                    source_params: {}
+                    v_box_size: [250, 250],
+                    source_params: {},
+                    populate_modal_form_body: (parent_obj, cont_css) => {
+                        alert('this KPI is not implemented yet');
+                    }
+                },
+                {
+                    name: 'More',
+                    object: 'none',
+                    icon: 'fas fa-angle-right',
+                    source_params: {},
+                    v_box_size: [250, 250],
+                    source_params: {},
+                    populate_modal_form_body: (parent_obj, cont_css) => {
+                        alert('KPI not detected');
+                    }
+                },
+                {
+                    name: 'Area',
+                    object: 'stacked_line_KPI',
+                    icon: 'fas fa-chart-area',
+                    source_params: {},
+                    v_box_size: [620, 310],
+                    populate_modal_form_body: (parent_obj, cont_css) => {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'users_whs'
+                        }, (data, status) => {
+                            let modal_html_body = `<select class="form-control" id="dwhs" onchange="dwhs_select_handler('AREA');">`;
+                            modal_html_body += `<option value="none">None</option>`;
+                            data.forEach((x) => {
+                                modal_html_body += `<option value="${x['ID']}">${x['name']}</option>`;
+                            });
+                            modal_html_body += '</select>';
+                            modal_html_body += '<br>';
+                            modal_html_body += `
+                            <label for="kpi_name_tf">KPI Name</label>
+                            <input type="text" class="form-control" id="kpi_name_tf" placeholder="KPI Name">
+                            `;
+                            modal_html_body += '<br>';
+                            show_modal(modal_html_body, 'Create Line Area Chart');
+                            $('#modal_ok').off();
+                            $('#modal_ok').click(() => {
+                                parent_obj.source_params.data_source = $("#dwhs option:selected").text();
+                                parent_obj.disp_params.chart_id = `"chart_${dummy_index}"`;
+                                let kpi_args = {
+                                    dwhs: $("#dwhs option:selected").text(),
+                                    stock_watch: $("#stacked_target").val()
+                                }
+                                if (parent_obj.source_params.data_source == 'Fin') {
+                                    kpi_args['year'] = $('#year_tf').val();
+                                }
+                                parent_obj.source_params.kpi_args = kpi_args;
+                                parent_obj.disp_params.kpi_name = $('#kpi_name_tf').val();
+                                dummy_index++;
+                                $.post('/api/private/data', {
+                                    api_method: 'get',
+                                    sess_id: document.cookie.split('=')[1],
+                                    target: 'kpi_stacked_line',
+                                    data_source: parent_obj.source_params.data_source,
+                                    kpi_args: JSON.stringify(parent_obj.source_params.kpi_args)
+                                }, (data, status) => {
+                                    // copy KPI structure into render buffer
+                                    // console.log(data);
+                                    let in_y_labels = [];
+                                    let is_labels_cached = false;
+                                    let data_sets = [];
+                                    let index = 0;
+                                    data.forEach((dataset) => {
+                                        let data_set_obj = {
+                                            data_set_label: `${parent_obj.source_params.kpi_args.stock_watch}_${index}`,
+                                            x_data: []
+                                        };
+                                        dataset.forEach((point) => {
+                                            if (!is_labels_cached) {
+                                                in_y_labels.push(point['label']);
+                                            }
+                                            data_set_obj.x_data.push(point['val']);
+                                        });
+                                        if (!is_labels_cached)
+                                            is_labels_cached = true;
+                                        data_sets.push(data_set_obj);
+                                        index++;
+                                    });
+                                    parent_obj.disp_params.y_labels = in_y_labels;
+                                    parent_obj.disp_params.t_x_data = data_sets;
+                                    parent_obj.view_params = cont_css;
+                                    kpi_profile.kpis.push(JSON.parse(JSON.stringify(parent_obj)));
+                                    // call render function
+                                    render_kpi_profile();
+                                });
+                                $('#modal_close').trigger('click');
+                            });
+                        });
+                    },
+                    disp_params: {
+                        y_labels: ['A', 'B', 'C', 'D'],
+                        view_params: '',
+                        t_x_data: [
+                            {
+                                data_set_label: 'DS1',
+                                x_data: [1, 2, 3, 4]
+                            },
+                            {
+                                data_set_label: 'DS2',
+                                x_data: [2, 4, 6, 8]
+                            },
+                            {
+                                data_set_label: 'DS3',
+                                x_data: [3, 6, 9, 12]
+                            },
+                        ],
+                        kpi_name: 'none'
+                    }
                 },
                 {
                     name: 'Sum',
@@ -347,6 +532,13 @@
                             $('#modal_ok').click(() => {
                                 parent_obj.source_params.data_source = $("#dwhs option:selected").text();
                                 parent_obj.source_params.tot_col = $('#tot_col').val();
+                                let kpi_args = {
+                                    dwhs: $("#dwhs option:selected").text()
+                                }
+                                if (parent_obj.source_params.data_source == 'Fin') {
+                                    kpi_args['year'] = $('#year_tf').val();
+                                }
+                                parent_obj.source_params.kpi_args = kpi_args;
                                 $('#modal_close').trigger('click');
                                 $.post('/api/private/data', {
                                     api_method: 'get',
@@ -354,6 +546,7 @@
                                     target: 'kpi_total',
                                     data_source: parent_obj.source_params.data_source,
                                     tot_col: parent_obj.source_params.tot_col,
+                                    kpi_args: JSON.stringify(parent_obj.source_params.kpi_args)
                                 }, (data, status) => {
                                     parent_obj.disp_params.kpi_name = $('#kpi_name_tf').val();
                                     parent_obj.disp_params.kpi_value = data['output'];
@@ -402,6 +595,13 @@
                                 parent_obj.source_params.data_source = $("#dwhs option:selected").text();
                                 parent_obj.source_params.target_field = $('#target_field').val();
                                 parent_obj.source_params.mes_eq = $('#mes_eq').val();
+                                let kpi_args = {
+                                    dwhs: $("#dwhs option:selected").text()
+                                }
+                                if (parent_obj.source_params.data_source == 'Fin') {
+                                    kpi_args['year'] = $('#year_tf').val();
+                                }
+                                parent_obj.source_params.kpi_args = JSON.stringify(kpi_args);
                                 $('#modal_close').trigger('click');
                                 $.post('/api/private/data', {
                                     api_method: 'get',
@@ -409,7 +609,8 @@
                                     target: 'kpi_vstate',
                                     data_source: parent_obj.source_params.data_source,
                                     target_field: parent_obj.source_params.target_field,
-                                    mes_eq: parent_obj.source_params.mes_eq
+                                    mes_eq: parent_obj.source_params.mes_eq,
+                                    kpi_args: parent_obj.source_params.kpi_args
                                 }, (data, status) => {
                                     parent_obj.disp_params.kpi_name = `"${$('#kpi_name_tf').val()}"`;
                                     parent_obj.disp_params.chart_id = `"chart_${dummy_index}"`;
@@ -487,6 +688,7 @@
                             target: 'kpi_total',
                             data_source: kpi_object.source_params.data_source,
                             tot_col: kpi_object.source_params.tot_col,
+                            kpi_args: JSON.stringify(kpi_object.source_params.kpi_args)
                         }, (data, status) => {
                             kpi_object.disp_params.kpi_value = data['output'];
                             init_count.count++;
@@ -500,7 +702,8 @@
                             target: 'kpi_vstate',
                             data_source: kpi_object.source_params.data_source,
                             target_field: kpi_object.source_params.target_field,
-                            mes_eq: kpi_object.source_params.mes_eq
+                            mes_eq: kpi_object.source_params.mes_eq,
+                            kpi_args: JSON.stringify(kpi_object.source_params.kpi_args)
                         }, (data, status) => {
                             kpi_object.disp_params.chart_id = `"chart_${dummy_index}"`;
                             let y_labels = [];
@@ -570,6 +773,28 @@
                         });
                         break;
                     }
+                    case 'AREA': {
+                        let new_modal_html_body = `
+                        <label for="stacked_target">Item Target</label>
+                        <input type="text" class="form-control" id="stacked_target" placeholder="Item Targets">
+                        `;
+                        let dwhs_option = $("#dwhs option:selected").text();
+                        $('#modal_body').html($('#modal_body').html() + new_modal_html_body);
+                        $("#dwhs option:selected").text(dwhs_option);
+                        break;
+                    }
+                    case 'raw_kpi': {
+                        let new_modal_html_body = `
+                        <div class="form-group">
+                            <label for="raw_sc">Raw KPI Script</label>
+                            <textarea class="form-control" id="raw_sc" rows="3"></textarea>
+                        </div>
+                        `;
+                        let dwhs_option = $("#dwhs option:selected").text();
+                        $('#modal_body').html($('#modal_body').html() + new_modal_html_body);
+                        $("#dwhs option:selected").text(dwhs_option);
+                        break;
+                    }
                     case 'AVG_KPI': {
                         let new_modal_html_body = `
                         <label for="avg_eq">Averaging Equation</label>
@@ -585,7 +810,14 @@
                         <label for="tot_col">Total Field</label>
                         <input type="text" class="form-control" id="tot_col" placeholder="Total Field">
                         `;
+                        new_modal_html_body += '<br>'
                         let dwhs_option = $("#dwhs option:selected").text();
+                        if (dwhs_option == 'Fin') {
+                            new_modal_html_body += `
+                            <label for="year_tf">Year</label>
+                            <input type="text" class="form-control" id="year_tf" placeholder="Year">
+                            `;
+                        }
                         $('#modal_body').html($('#modal_body').html() + new_modal_html_body);
                         $("#dwhs option:selected").text(dwhs_option);
                         break;
@@ -600,7 +832,14 @@
                         <label for="mes_eq">Mesure Equation</label>
                         <input type="text" class="form-control" id="mes_eq" placeholder="Mesure Equation">
                         `;
+                        new_modal_html_body += '<br>';
                         let dwhs_option = $("#dwhs option:selected").text();
+                        if (dwhs_option == 'Fin') {
+                            new_modal_html_body += `
+                            <label for="year_tf">Year</label>
+                            <input type="text" class="form-control" id="year_tf" placeholder="Year">
+                            `;
+                        }
                         $('#modal_body').html($('#modal_body').html() + new_modal_html_body);
                         $("#dwhs option:selected").text(dwhs_option);
                         break;
@@ -616,7 +855,7 @@
 
             function get_kpi_card(kpi_name, kpi_icon, item_index) {
                 return `
-                <div class="kpi_card" draggable="true" ondragstart="drag_action(event, ${item_index});">
+                <div id="btn_${item_index}" class="kpi_card" draggable="true" ondragstart="drag_action(event, ${item_index});">
                         <i class="${kpi_icon}"></i>
                         <p>${kpi_name}</p>
                 </div>
@@ -694,7 +933,7 @@
                 $('#center_modal_title').text('Save KPI Profile');
                 let body_html = `
                 <label for="profile_name">Profile Name</label>
-                <input type="text" class="form-control" id="profile_name" placeholder="Profile Name">
+                <input type="text" class="form-control" id="profile_name" placeholder="Profile Name" autocomplete="off">
                 `;
                 $('#center_modal_body').html(body_html);
                 $('#center_modal_save').off();
@@ -717,11 +956,19 @@
 
             $(document).ready(() => {
                 let kpi_tool_box_html = '';
+                let sec_kpi_tool_box = '';
                 for (let i = 0; i < kpi_ui_elements.length; i++) {
-                    const x = kpi_ui_elements[i]
-                    kpi_tool_box_html += get_kpi_card(x['name'], x['icon'], i);
-                    kpi_tool_box_html += '<br>'
+                    if (i > 4) {
+                        const x = kpi_ui_elements[i]
+                        sec_kpi_tool_box += get_kpi_card(x['name'], x['icon'], i);
+                        sec_kpi_tool_box += '<br>'
+                    } else {
+                        const x = kpi_ui_elements[i]
+                        kpi_tool_box_html += get_kpi_card(x['name'], x['icon'], i);
+                        kpi_tool_box_html += '<br>'
+                    }
                 }
+
                 kpi_tool_box_html += `
                 <div id="tool_box_bot">
                     <div class="kpi_card" onclick="window.location.href = \'/\';">
@@ -733,13 +980,23 @@
                         <p>Save</p>
                     </div>
                     <div class="kpi_card">
-                        <i class="fas fa-sign-out-alt"></i>
+                        <i class="fas fa-sign-out-alt" onclick="sign_out();"></i>
                         <p>Logout</p>
                     </div>
                 </div>
                 `;
+                $('#sec_tool_box').html(sec_kpi_tool_box);
                 $('#tool_box').html(kpi_tool_box_html);
+
+                $('#btn_4').click(() => {
+                    $('#sec_tool_box').toggle();
+                });
             });
+
+            function sign_out() {
+                document.cookie = "sessid= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+                window.location.href = '/';
+            }
         </script>
 </body>
 

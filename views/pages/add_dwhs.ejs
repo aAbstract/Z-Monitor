@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../templates/css_includes', {}) %>
+        <title>Create DWHS</title>
+</head>
+
+<body>
+    <%- include('../templates/js_includes', {}) %>
+
+        <style>
+            #main_box {
+                margin-left: auto;
+                margin-right: auto;
+                width: 600px;
+                height: 600px;
+                padding: 40px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                margin-top: 120px;
+            }
+
+            html {
+                font-family: sans-serif;
+                height: 100%;
+                background-color: #e0e0e0;
+            }
+
+            body {
+                background-color: #e0e0e0;
+            }
+
+            #add_dwhs_field {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background-color: #2196f3;
+                color: white;
+                transition: 0.5s ease;
+                cursor: pointer;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #create_dwhs_btn {
+                width: 120px;
+                height: 60px;
+                border-radius: 8px;
+                background-color: #2196f3;
+                color: white;
+                transition: 0.5s ease;
+                cursor: pointer;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #create_dwhs_btn:hover {
+                border: #2196f3 1px solid;
+                color: #2196f3;
+                background-color: white;
+            }
+
+            #use_exist_dwhs_btn {
+                width: 120px;
+                height: 60px;
+                border-radius: 8px;
+                background-color: #2196f3;
+                color: white;
+                transition: 0.5s ease;
+                cursor: pointer;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                margin-right: 16px;
+            }
+
+            #use_exist_dwhs_btn:hover {
+                border: #2196f3 1px solid;
+                color: #2196f3;
+                background-color: white;
+            }
+
+            #add_dwhs_field:hover {
+                border: #2196f3 1px solid;
+                color: #2196f3;
+                background-color: white;
+            }
+
+            .action_btn_cont {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+
+            #dwhs_table_struct tr:nth-child(even) {
+                background-color: #eee;
+            }
+
+            #dwhs_table_struct tr:nth-child(odd) {
+                background-color: #fff;
+            }
+
+            #dwhs_table_struct th {
+                padding: 4px;
+                color: white;
+                background-color: #212121;
+            }
+
+            #table_cont {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 18px;
+                overflow-y: auto;
+            }
+
+            #table_cont td {
+                padding: 4px;
+            }
+
+            #dwhs_table_struct {
+                border: 1px solid #212121;
+            }
+
+            #table_cont td {
+                border-bottom: 1px solid #212121;
+            }
+
+            .action_btn_cont {
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                align-items: flex-end;
+            }
+
+            .create_dwhs_btn_cont {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-end;
+                justify-content: center;
+                flex-grow: 1;
+            }
+        </style>
+
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" id="modal_trigger"
+            style="display: none;">
+        </button>
+
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="modal_title"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal_title"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="modal_body">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                            id="modal_close">Close</button>
+                        <button type="button" class="btn btn-primary" id="modal_ok">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#center_modal"
+            style="display: none;" id="center_modal_trigger"></button>
+
+        <div class="modal fade" id="center_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="center_modal_title"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="center_modal_body">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                            id="center_modal_close">Close</button>
+                        <button type="button" class="btn btn-primary" id="center_modal_ok">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="main_box" class="shadow-lg p-3 mb-5 bg-white rounded">
+            <div id="table_cont">
+                <table style="width:96%" id="dwhs_table_struct">
+                </table>
+            </div>
+            <div class="action_btn_cont">
+                <div class="shadow p-3 mb-5" id="add_dwhs_field"><i class="fas fa-plus"></i></div>
+            </div>
+            <div class="create_dwhs_btn_cont">
+                <div class="shadow p-3 mb-5" id="use_exist_dwhs_btn">Use Exist</div>
+                <div class="shadow p-3 mb-5" id="create_dwhs_btn">CREATE</div>
+            </div>
+        </div>
+        <script>
+            // runtime variables
+            let fields_array = [];
+            let exist_dwhs = [];
+
+            function render_dwhs_struct() {
+                let table_body_html = `
+                <tr>
+                    <th>Field Name</th>
+                    <th>Data Type</th>
+                </tr>
+                `;
+                if (fields_array.length != 0) {
+                    fields_array.forEach((x) => {
+                        table_body_html += `
+                        <tr>
+                            <td>${x['field_name']}</td>
+                            <td>${x['data_type']}</td>
+                        </tr>
+                        `;
+                    });
+                } else {
+                    table_body_html += '<tr><td colspan="2" style="text-align: center;">Empty Database Structure</td></tr>';
+                }
+                $('#dwhs_table_struct').html(table_body_html);
+            }
+
+            function show_add_dwhs_field_modal() {
+                let modal_html = `
+                <label for="field_name_tf">Field Name</label>
+                <input type="text" class="form-control" id="field_name_tf" placeholder="Field Name">
+                <br>
+                <label for="field_dt">Data Type</label>
+                <select class="form-control" id="field_dt">
+                    <option value="TEXT">TEXT</option>
+                    <option value="INTEGER">INTEGER</option>
+                    <option value="TEXT">DATE</option>
+                </select>
+                `;
+                $('#modal_ok').off();
+                $('#modal_ok').click(() => {
+                    fields_array.push({
+                        'field_name': $('#field_name_tf').val(),
+                        'sql_data_type': $('#field_dt option:selected').val(),
+                        'data_type': $('#field_dt option:selected').text()
+                    });
+                    render_dwhs_struct();
+                    $('#modal_close').trigger('click');
+                });
+                $('#modal_title').text('Add Data Field');
+                $('#modal_body').html(modal_html);
+                $('#modal_trigger').trigger('click');
+            }
+
+            function show_create_dwhs_modal() {
+                let modal_html = `
+                <label for="dwhs_name_tf">Data Warehouse Name</label>
+                <input type="text" class="form-control" id="dwhs_name_tf" placeholder="Data Warehouse Name">
+                `;
+                $('#center_modal_ok').off();
+                $('#center_modal_ok').click(() => {
+                    $.post('/api/private/data', {
+                        api_method: 'post',
+                        sess_id: document.cookie.split('=')[1],
+                        target: 'dwhs',
+                        table_name: $('#dwhs_name_tf').val(),
+                        dwhs_action: 'create',
+                        fields_array: JSON.stringify(fields_array)
+                    }, (data, status) => {
+                        if (data.private_api_message == 'success') {
+                            window.location.href = '/';
+                        } else {
+                            alert('Error Creating Data Warehouse');
+                        }
+                    });
+                    $('#center_modal_close').trigger('click');
+                });
+                $('#center_modal_title').text('Create Data Warehouse');
+                $('#center_modal_body').html(modal_html);
+                $('#center_modal_trigger').trigger('click');
+            }
+
+            function show_choose_exist_dwhs_modal() {
+                let modal_html = '<select class="form-control" id="exist_dwhs">';
+                exist_dwhs.forEach((x) => {
+                    modal_html += `<option value="${x['name']}">${x['name']}</option>`;
+                });
+                modal_html += '</select>'
+                $('#center_modal_ok').off();
+                $('#center_modal_ok').click(() => {
+                    $.post('/api/private/data', {
+                        api_method: 'post',
+                        sess_id: document.cookie.split('=')[1],
+                        target: 'dwhs',
+                        table_name: $('#dwhs_name_tf').val(),
+                        dwhs_action: 'use_exist',
+                        table_name: $('#exist_dwhs option:selected').text()
+                    }, (data, status) => {
+                        if (data.private_api_message == 'success') {
+                            window.location.href = '/';
+                        } else {
+                            alert('Error Creating Data Warehouse');
+                        }
+                    });
+                    $('#center_modal_close').trigger('click');
+                });
+                $('#center_modal_title').text('Create Data Warehouse');
+                $('#center_modal_body').html(modal_html);
+                $('#center_modal_trigger').trigger('click');
+            }
+
+            $(document).ready(() => {
+                // main code
+                $('#add_dwhs_field').click(() => {
+                    show_add_dwhs_field_modal();
+                });
+                $('#create_dwhs_btn').click(() => {
+                    show_create_dwhs_modal();
+                });
+                $('#use_exist_dwhs_btn').click(() => {
+                    show_choose_exist_dwhs_modal();
+                });
+                render_dwhs_struct();
+                // load available database structures
+                $.post('/api/private/data', {
+                    api_method: 'get',
+                    sess_id: document.cookie.split('=')[1],
+                    target: 'dwhs'
+                }, (data, status) => {
+                    exist_dwhs = data;
+                });
+            });
+        </script>
+</body>
+
+</html>

@@ -16,6 +16,8 @@
         <script type="text/javascript" src="/source/widgets/ranked_KPI.js"></script>
         <script type="text/javascript" src="/source/widgets/set_point_KPI.js"></script>
         <script type="text/javascript" src="/source/widgets/view_state_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/raw_KPI.js"></script>
+        <script type="text/javascript" src="/source/widgets/stacked_line_KPI.js"></script>
         <style>
             body,
             html {
@@ -28,20 +30,35 @@
                 display: flex;
                 flex-direction: row;
             }
-            
+
             .kpi_cont {
                 cursor: pointer;
                 transition: 0.5s ease;
             }
-            
+
             .kpi_cont:hover {
                 border: #2196f3 1px solid !important;
+            }
+
+            @media print {
+                @page {
+                    size: landscape;
+                    margin: 0 !important;
+                }
+
+                body {
+                    transform: scale(0.7) translate(-210px, -200px);
+                }
             }
         </style>
         <div id="main_cont">
 
         </div>
         <script>
+            // runtime vars
+            let loaded_count_holder = { count: 0 };
+            let dummy_index = 0;
+
             function get_url_param(param_name) {
                 return new URLSearchParams(window.location.search).get(param_name);
             }
@@ -53,11 +70,195 @@
             function render_kpi_profile(kpi_profile) {
                 $('#kpi_canvas').html('');
                 kpi_profile.kpis.forEach((x) => {
-                    const new_kpi_html = `
-                    <div id="kpi_cont" style="${x['view_params']}">${get_view(x['object'], JSON.stringify(x['disp_params']))}</div>
-                    `;
-                    $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                    clear_kpi(x);
+                    build_kpi(x, loaded_count_holder);
                 });
+            }
+
+            function build_kpi(kpi_object, init_count) {
+                $('#kpi_canvas').html('');
+                switch (kpi_object.name) {
+                    case 'Ranked': {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'kpi_ranked',
+                            data_source: kpi_object.source_params.data_source,
+                            label_col: kpi_object.source_params.labels_col,
+                            aggr_col: kpi_object.source_params.aggr_source,
+                        }, (data, status) => {
+                            kpi_object.disp_params.chart_id = `"chart_${dummy_index}"`;
+                            const first_five_objs = data.slice(0, 5);
+                            let y_labels = [];
+                            let x_date = [];
+                            first_five_objs.forEach((x) => {
+                                y_labels.push(x['data_label']);
+                                x_date.push(x['aggr_val']);
+                            });
+                            kpi_object.disp_params.y_labels = JSON.stringify(y_labels);
+                            kpi_object.disp_params.x_data = JSON.stringify(x_date);
+                            kpi_object.disp_params.activeStoresNo = data.length;
+                            init_count.count++;
+                            dummy_index++;
+                            // draw kpi
+                            const new_kpi_html = `
+                            <div id="kpi_cont" style="${kpi_object['view_params']}">${get_view(kpi_object['object'], JSON.stringify(kpi_object['disp_params']))}</div>
+                            `;
+                            $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                        });
+                        break;
+                    }
+                    case 'AVG': {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'kpi_avg',
+                            data_source: kpi_object.source_params.data_source,
+                            avg_eq: kpi_object.source_params.avg_eq,
+                        }, (data, status) => {
+                            kpi_object.disp_params.kpi_value = data['output'];
+                            init_count.count++;
+                            const new_kpi_html = `
+                            <div id="kpi_cont" style="${kpi_object['view_params']}">${get_view(kpi_object['object'], JSON.stringify(kpi_object['disp_params']))}</div>
+                            `;
+                            $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                        });
+                        break;
+                    }
+                    case 'Sum': {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'kpi_total',
+                            data_source: kpi_object.source_params.data_source,
+                            tot_col: kpi_object.source_params.tot_col,
+                            kpi_args: JSON.stringify(kpi_object.source_params.kpi_args)
+                        }, (data, status) => {
+                            kpi_object.disp_params.kpi_value = data['output'];
+                            init_count.count++;
+                            const new_kpi_html = `
+                            <div id="kpi_cont" style="${kpi_object['view_params']}">${get_view(kpi_object['object'], JSON.stringify(kpi_object['disp_params']))}</div>
+                            `;
+                            $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                        });
+                        break;
+                    }
+                    case 'View State': {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'kpi_vstate',
+                            data_source: kpi_object.source_params.data_source,
+                            target_field: kpi_object.source_params.target_field,
+                            mes_eq: kpi_object.source_params.mes_eq,
+                            kpi_args: JSON.stringify(kpi_object.source_params.kpi_args)
+                        }, (data, status) => {
+                            kpi_object.disp_params.chart_id = `"chart_${dummy_index}"`;
+                            let y_labels = [];
+                            let x_date = [];
+                            data.forEach((x) => {
+                                y_labels.push(x['target']);
+                                x_date.push(x['mes_val']);
+                            });
+                            kpi_object.disp_params.y_labels = JSON.stringify(y_labels);
+                            kpi_object.disp_params.x_data = JSON.stringify(x_date);
+                            dummy_index++;
+                            init_count.count++;
+                            const new_kpi_html = `
+                            <div id="kpi_cont" style="${kpi_object['view_params']}">${get_view(kpi_object['object'], JSON.stringify(kpi_object['disp_params']))}</div>
+                            `;
+                            $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                        });
+                        break;
+                    }
+                    case 'Raw': {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'kpi_raw',
+                            data_source: kpi_object.source_params.data_source,
+                            raw_sc: kpi_object.source_params.raw_script
+                        }, (data, status) => {
+                            kpi_object.disp_params.raw_body_data = data;
+                            init_count.count++;
+                            const new_kpi_html = `
+                            <div id="kpi_cont" style="${kpi_object['view_params']}">${get_view(kpi_object['object'], JSON.stringify(kpi_object['disp_params']))}</div>
+                            `;
+                            $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                        });
+                        break;
+                    }
+                    case 'Area': {
+                        $.post('/api/private/data', {
+                            api_method: 'get',
+                            sess_id: document.cookie.split('=')[1],
+                            target: 'kpi_stacked_line',
+                            data_source: kpi_object.source_params.data_source,
+                            raw_sc: kpi_object.source_params.raw_script,
+                            kpi_args: JSON.stringify(kpi_object.source_params.kpi_args)
+                        }, (data, status) => {
+                            // kpi_object.disp_params.raw_body_data = data;
+                            init_count.count++;
+                            let in_y_labels = [];
+                            let is_labels_cached = false;
+                            let data_sets = [];
+                            let index = 0;
+                            data.forEach((dataset) => {
+                                let data_set_obj = {
+                                    data_set_label: `${kpi_object.source_params.kpi_args.stock_watch}_${index}`,
+                                    x_data: []
+                                };
+                                dataset.forEach((point) => {
+                                    if (!is_labels_cached) {
+                                        in_y_labels.push(point['label']);
+                                    }
+                                    data_set_obj.x_data.push(point['val']);
+                                });
+                                if (!is_labels_cached)
+                                    is_labels_cached = true;
+                                data_sets.push(data_set_obj);
+                                index++;
+                            });
+                            kpi_object.disp_params.y_labels = in_y_labels;
+                            kpi_object.disp_params.t_x_data = data_sets;
+                            const new_kpi_html = `
+                            <div id="kpi_cont" style="${kpi_object['view_params']}">${get_view(kpi_object['object'], JSON.stringify(kpi_object['disp_params']))}</div>
+                            `;
+                            $('#main_cont').html($('#main_cont').html() + new_kpi_html);
+                        });
+                        break;
+                    }
+                }
+            }
+
+            function clear_kpi(kpi_object) {
+                switch (kpi_object.name) {
+                    case 'Ranked': {
+                        kpi_object.disp_params.y_labels = JSON.stringify([]);
+                        kpi_object.disp_params.x_data = JSON.stringify([]);
+                        kpi_object.disp_params.activeStoresNo = 0;
+                        break;
+                    }
+                    case 'SUM':
+                    case 'AVG': {
+                        kpi_object.disp_params.kpi_value = 0;
+                        break;
+                    }
+                    case 'View State': {
+                        kpi_object.disp_params.y_labels = JSON.stringify([]);
+                        kpi_object.disp_params.x_data = JSON.stringify([]);
+                        break;
+                    }
+                    case 'Raw': {
+                        kpi_object.disp_params.raw_body_data = '{}';
+                        break;
+                    }
+                    case 'Area': {
+                        kpi_object.disp_params.y_labels = [];
+                        kpi_object.disp_params.t_x_data = [];
+                        break;
+                    }
+                }
             }
 
             $(document).ready(() => {

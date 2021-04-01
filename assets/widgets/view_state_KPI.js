@@ -27,6 +27,9 @@ let view_state_KPI = {
     // },
     // for all elemnts in state >>>> do get and set
 
+    // "borderColor": ["rgb(255, 99, 132)", "rgb(255, 159, 64)", "rgb(255, 205, 86)", "rgb(75, 192, 192)", "rgb(54, 162, 235)", "rgb(153, 102, 255)", "rgb(201, 203, 207)"],
+    // "backgroundColor": ["rgba(255, 99, 132)", "rgba(255, 159, 64)", "rgba(255, 205, 86)", "rgba(75, 192, 192)", "rgba(54, 162, 235)", "rgba(153, 102, 255)", "rgba(201, 203, 207)"],
+
     get_view: (view_args_str) => {
         let view_args = JSON.parse(view_args_str);
         return `
@@ -41,9 +44,7 @@ let view_state_KPI = {
                                 "label": ${view_args.kpi_name},
                                 "data": ${view_args.x_data},
                                 "fill": false,
-                                "backgroundColor": ["rgba(255, 99, 132, 0.2)", "rgba(255, 159, 64, 0.2)", "rgba(255, 205, 86, 0.2)", "rgba(75, 192, 192, 0.2)", "rgba(54, 162, 235, 0.2)", "rgba(153, 102, 255, 0.2)", "rgba(201, 203, 207, 0.2)"],
-                                "borderColor": ["rgb(255, 99, 132)", "rgb(255, 159, 64)", "rgb(255, 205, 86)", "rgb(75, 192, 192)", "rgb(54, 162, 235)", "rgb(153, 102, 255)", "rgb(201, 203, 207)"],
-                                "borderWidth": 1
+                                "backgroundColor": "rgba(54, 162, 235)"
                             }]
                         },
                         "options": {
@@ -58,8 +59,7 @@ let view_state_KPI = {
                             },
                             "legend": {
                                 "labels": {
-                                    "fontSize": 12
-
+                                    "fontSize": 12,
                                 }
                             }
                         }
